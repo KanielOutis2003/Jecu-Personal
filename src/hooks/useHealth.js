@@ -1,35 +1,62 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { today } from "../constants/theme";
-
-const db = {
-  get: (key) => JSON.parse(localStorage.getItem(key) || "null"),
-  set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-};
+import { supabase } from "../lib/supabase";
 
 export function useHealth() {
-  const todayKey = `health_${today()}`;
-  const [health, setHealth] = useState(() => db.get(todayKey) || { water: 0, sleep: 0, steps: 0, meals: [], habits: {} });
+  const [health, setHealth] = useState({ water: 0, sleep: 0, steps: 0, meals: [], habits: {} });
+  const [loading, setLoading] = useState(true);
 
-  const save = (h) => {
-    db.set(todayKey, h);
-    setHealth(h);
+  const fetchHealth = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('health_logs')
+        .select('*')
+        .eq('date', today())
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) setHealth(data);
+    } catch (err) {
+      console.error("Error fetching health:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHealth();
+  }, []);
+
+  const saveHealth = async (updates) => {
+    const newHealth = { ...health, ...updates, date: today() };
+    try {
+      const { data, error } = await supabase
+        .from('health_logs')
+        .upsert(newHealth, { onConflict: 'user_id, date' })
+        .select();
+      
+      if (error) throw error;
+      setHealth(data[0]);
+    } catch (err) {
+      console.error("Error saving health:", err.message);
+    }
   };
 
   const updateHealth = (updates) => {
-    save({ ...health, ...updates });
+    saveHealth(updates);
   };
 
   const toggleHabit = (key) => {
-    save({ ...health, habits: { ...health.habits, [key]: !health.habits[key] } });
+    saveHealth({ habits: { ...health.habits, [key]: !health.habits[key] } });
   };
 
   const addMeal = (meal) => {
-    save({ ...health, meals: [...(health.meals || []), meal] });
+    saveHealth({ meals: [...(health.meals || []), meal] });
   };
 
   const removeMeal = (index) => {
-    save({ ...health, meals: health.meals.filter((_, i) => i !== index) });
+    saveHealth({ meals: health.meals.filter((_, i) => i !== index) });
   };
 
-  return { health, updateHealth, toggleHabit, addMeal, removeMeal };
+  return { health, loading, updateHealth, toggleHabit, addMeal, removeMeal };
 }

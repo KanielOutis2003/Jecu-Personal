@@ -1,27 +1,89 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { today } from "../constants/theme";
-
-const db = {
-  get: (key) => JSON.parse(localStorage.getItem(key) || "null"),
-  set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-};
+import { supabase } from "../lib/supabase";
 
 export function useBudget() {
-  const monthKey = `budget_${today().slice(0, 7)}`;
-  const [data, setData] = useState(() => db.get(monthKey) || { allowance: 0, expenses: [] });
+  const currentMonth = today().slice(0, 7);
+  const [data, setData] = useState({ allowance: 0, expenses: [] });
+  const [loading, setLoading] = useState(true);
 
-  const save = (d) => {
-    db.set(monthKey, d);
-    setData(d);
+  const fetchData = async () => {
+    try {
+      // Fetch allowance
+      const { data: budgetData, error: budgetError } = await supabase
+        .from('budget')
+        .select('allowance')
+        .eq('month', currentMonth)
+        .single();
+      
+      if (budgetError && budgetError.code !== 'PGRST116') throw budgetError;
+
+      // Fetch expenses
+      const { data: expensesData, error: expensesError } = await supabase
+        .from('expenses')
+        .select('*')
+        .gte('date', `${currentMonth}-01`)
+        .lte('date', `${currentMonth}-31`)
+        .order('date', { ascending: false });
+      
+      if (expensesError) throw expensesError;
+
+      setData({
+        allowance: budgetData?.allowance || 0,
+        expenses: expensesData || []
+      });
+    } catch (err) {
+      console.error("Error fetching budget data:", err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const setAllowance = (amount) => save({ ...data, allowance: parseFloat(amount) || 0 });
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const addExpense = (expense) => {
-    save({ ...data, expenses: [...data.expenses, { id: Date.now(), ...expense, amount: parseFloat(expense.amount), date: today() }] });
+  const setAllowance = async (amount) => {
+    try {
+      const { data: budgetData, error } = await supabase
+        .from('budget')
+        .upsert({ month: currentMonth, allowance: parseFloat(amount) || 0 }, { onConflict: 'user_id, month' })
+        .select();
+      
+      if (error) throw error;
+      setData(prev => ({ ...prev, allowance: budgetData[0].allowance }));
+    } catch (err) {
+      console.error("Error setting allowance:", err.message);
+    }
   };
 
-  const removeExpense = (id) => save({ ...data, expenses: data.expenses.filter(x => x.id !== id) });
+  const addExpense = async (expense) => {
+    try {
+      const { data: expenseData, error } = await supabase
+        .from('expenses')
+        .insert([{ ...expense, amount: parseFloat(expense.amount), date: today() }])
+        .select();
+      
+      if (error) throw error;
+      setData(prev => ({ ...prev, expenses: [expenseData[0], ...prev.expenses] }));
+    } catch (err) {
+      console.error("Error adding expense:", err.message);
+    }
+  };
 
-  return { data, setAllowance, addExpense, removeExpense };
+  const removeExpense = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      setData(prev => ({ ...prev, expenses: prev.expenses.filter(x => x.id !== id) }));
+    } catch (err) {
+      console.error("Error removing expense:", err.message);
+    }
+  };
+
+  return { data, loading, setAllowance, addExpense, removeExpense };
 }

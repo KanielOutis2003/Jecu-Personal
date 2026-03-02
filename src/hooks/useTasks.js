@@ -1,25 +1,72 @@
 import { useState, useEffect } from "react";
-
-const db = {
-  get: (key) => JSON.parse(localStorage.getItem(key) || "null"),
-  set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-};
+import { supabase } from "../lib/supabase";
 
 export function useTasks() {
-  const [tasks, setTasks] = useState(() => db.get("tasks") || []);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const save = (t) => {
-    db.set("tasks", t);
-    setTasks(t);
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (err) {
+      console.error("Error fetching tasks:", err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addTask = (form) => {
-    const newTask = { id: Date.now(), ...form, done: false, created: new Date().toISOString().split("T")[0] };
-    save([...tasks, newTask]);
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const addTask = async (form) => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{ ...form, done: false }])
+        .select();
+      
+      if (error) throw error;
+      setTasks([data[0], ...tasks]);
+    } catch (err) {
+      console.error("Error adding task:", err.message);
+    }
   };
 
-  const toggleTask = (id) => save(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
-  const removeTask = (id) => save(tasks.filter(t => t.id !== id));
+  const toggleTask = async (id) => {
+    const task = tasks.find(t => t.id === id);
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ done: !task.done })
+        .eq('id', id);
+      
+      if (error) throw error;
+      setTasks(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+    } catch (err) {
+      console.error("Error toggling task:", err.message);
+    }
+  };
 
-  return { tasks, addTask, toggleTask, removeTask };
+  const removeTask = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      setTasks(tasks.filter(t => t.id !== id));
+    } catch (err) {
+      console.error("Error removing task:", err.message);
+    }
+  };
+
+  return { tasks, loading, addTask, toggleTask, removeTask };
 }

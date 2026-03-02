@@ -11,13 +11,21 @@ import { Tag } from "../components/ui/Tag";
 import AIResponse from "../components/AIResponse";
 
 export default function Budget() {
-  const { data, setAllowance, addExpense, removeExpense } = useBudget();
+  const { data, loading: dataLoading, setAllowance, addExpense, removeExpense } = useBudget();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ label: "", amount: "", category: "food" });
   const [aiTip, setAiTip] = useState("");
   const [loading, setLoading] = useState(false);
   const [editAllowance, setEditAllowance] = useState(false);
   const [tempAllowance, setTempAllowance] = useState(data.allowance);
+
+  if (dataLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px", color: theme.muted }}>
+        <span className="loading-dots">Loading budget data</span>
+      </div>
+    );
+  }
 
   const totalSpent = data.expenses.reduce((s, e) => s + e.amount, 0);
   const remaining = data.allowance - totalSpent;

@@ -9,11 +9,19 @@ import { Tag } from "../components/ui/Tag";
 import AIResponse from "../components/AIResponse";
 
 export default function OJTReport() {
-  const { logs, addLog, removeLog } = useOJT();
+  const { logs, loading: dataLoading, addLog, removeLog } = useOJT();
   const [form, setForm] = useState({ date: today(), activities: "", hours: 8 });
   const [report, setReport] = useState("");
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState("log"); // log | generate
+
+  if (dataLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px", color: theme.muted }}>
+        <span className="loading-dots">Loading OJT logs</span>
+      </div>
+    );
+  }
 
   const handleAddLog = () => {
     if (!form.activities.trim()) return;

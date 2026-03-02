@@ -9,10 +9,18 @@ import { ProgressBar } from "../components/ui/ProgressBar";
 import AIResponse from "../components/AIResponse";
 
 export default function Health() {
-  const { health, updateHealth, toggleHabit, addMeal, removeMeal } = useHealth();
+  const { health, loading: dataLoading, updateHealth, toggleHabit, addMeal, removeMeal } = useHealth();
   const [aiTip, setAiTip] = useState("");
   const [loading, setLoading] = useState(false);
   const [mealInput, setMealInput] = useState("");
+
+  if (dataLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px", color: theme.muted }}>
+        <span className="loading-dots">Loading health logs</span>
+      </div>
+    );
+  }
 
   const habitsList = [
     { key: "exercise", label: "Exercise", emoji: "🏃" },

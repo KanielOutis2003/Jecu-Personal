@@ -10,12 +10,20 @@ import { Tag } from "../components/ui/Tag";
 import AIResponse from "../components/AIResponse";
 
 export default function Tasks() {
-  const { tasks, addTask, toggleTask, removeTask } = useTasks();
+  const { tasks, loading: dataLoading, addTask, toggleTask, removeTask } = useTasks();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ name: "", type: "project", due: "", priority: "medium" });
   const [aiTip, setAiTip] = useState("");
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
+
+  if (dataLoading) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px", color: theme.muted }}>
+        <span className="loading-dots">Loading tasks</span>
+      </div>
+    );
+  }
 
   const handleAdd = () => {
     if (!form.name.trim()) return;

@@ -1,18 +1,30 @@
-import { theme, daysLeft, today } from "../constants/theme";
+import { theme, daysLeft } from "../constants/theme";
 import { Card } from "../components/ui/Card";
+import { useTasks } from "../hooks/useTasks";
+import { useHealth } from "../hooks/useHealth";
+import { useBudget } from "../hooks/useBudget";
+import { useOJT } from "../hooks/useOJT";
 
 export default function Home({ onTabChange }) {
-  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-  const todayKey = `health_${today()}`;
-  const health = JSON.parse(localStorage.getItem(todayKey) || '{"water":0,"habits":{}}');
-  const monthKey = `budget_${today().slice(0, 7)}`;
-  const budget = JSON.parse(localStorage.getItem(monthKey) || '{"allowance":0,"expenses":[]}');
-  const logs = JSON.parse(localStorage.getItem("ojt_logs") || "[]");
+  const { tasks, loading: tasksLoading } = useTasks();
+  const { health, loading: healthLoading } = useHealth();
+  const { data: budgetData, loading: budgetLoading } = useBudget();
+  const { logs, loading: ojtLoading } = useOJT();
+
+  const loading = tasksLoading || healthLoading || budgetLoading || ojtLoading;
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px", color: theme.muted }}>
+        <span className="loading-dots">Loading your dashboard</span>
+      </div>
+    );
+  }
 
   const pending = tasks.filter(t => !t.done).length;
   const urgent = tasks.filter(t => !t.done && t.due && daysLeft(t.due) <= 2).length;
-  const spent = budget.expenses.reduce((s, e) => s + e.amount, 0);
-  const remaining = budget.allowance - spent;
+  const spent = budgetData.expenses.reduce((s, e) => s + e.amount, 0);
+  const remaining = budgetData.allowance - spent;
   const habits = Object.values(health.habits).filter(Boolean).length;
 
   const hour = new Date().getHours();

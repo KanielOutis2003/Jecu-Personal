@@ -1,23 +1,57 @@
-import { useState } from "react";
-
-const db = {
-  get: (key) => JSON.parse(localStorage.getItem(key) || "null"),
-  set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
-};
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export function useOJT() {
-  const [logs, setLogs] = useState(() => db.get("ojt_logs") || []);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const save = (l) => {
-    db.set("ojt_logs", l);
-    setLogs(l);
+  const fetchLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('ojt_logs')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      setLogs(data || []);
+    } catch (err) {
+      console.error("Error fetching OJT logs:", err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addLog = (log) => {
-    save([...logs, { id: Date.now(), ...log }]);
+  useEffect(() => {
+    fetchLogs();
+  }, []);
+
+  const addLog = async (log) => {
+    try {
+      const { data, error } = await supabase
+        .from('ojt_logs')
+        .insert([log])
+        .select();
+      
+      if (error) throw error;
+      setLogs([data[0], ...logs]);
+    } catch (err) {
+      console.error("Error adding OJT log:", err.message);
+    }
   };
 
-  const removeLog = (id) => save(logs.filter(x => x.id !== id));
+  const removeLog = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('ojt_logs')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      setLogs(logs.filter(x => x.id !== id));
+    } catch (err) {
+      console.error("Error removing OJT log:", err.message);
+    }
+  };
 
-  return { logs, addLog, removeLog };
+  return { logs, loading, addLog, removeLog };
 }
