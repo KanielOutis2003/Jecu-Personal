@@ -2,14 +2,24 @@ import { theme, icons } from "../constants/theme";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "./ui/Button";
 
-export default function Header() {
+export default function Header({ theme: currentTheme, onToggleTheme }) {
   const { user, signOut } = useAuth();
 
   return (
     <div className="header">
       <div className="logo">StudentOS</div>
       
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onToggleTheme}
+          style={{ padding: "8px", borderRadius: "10px", minWidth: "36px" }}
+          title={currentTheme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {currentTheme === "dark" ? icons.sun : icons.moon}
+        </Button>
+
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
           <div style={{ fontSize: "13px", fontWeight: "600", color: theme.text }}>
             {user?.email?.split("@")[0] || "Scholar"}

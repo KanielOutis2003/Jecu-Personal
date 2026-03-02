@@ -9,14 +9,26 @@ export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(localStorage.getItem("rememberEmail") ? true : false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberEmail");
+    if (savedEmail) setEmail(savedEmail);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    if (rememberMe) {
+      localStorage.setItem("rememberEmail", email);
+    } else {
+      localStorage.removeItem("rememberEmail");
+    }
 
     try {
       if (isLogin) {
@@ -61,7 +73,7 @@ export default function AuthPage() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            <label style={{ fontSize: "13px", fontWeight: "600", color: theme.muted }}>Password</label>
+            <label style={{ fontSize: "13px", fontWeight: "600", color: "var(--muted)" }}>Password</label>
             <Input 
               type="password" 
               placeholder="••••••••" 
@@ -69,6 +81,19 @@ export default function AuthPage() {
               onChange={(e) => setPassword(e.target.value)} 
               required 
             />
+          </div>
+
+          <div className="row" style={{ marginTop: "4px" }}>
+            <input 
+              type="checkbox" 
+              id="remember"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              style={{ width: "16px", height: "16px", accentColor: theme.accent }}
+            />
+            <label htmlFor="remember" style={{ fontSize: "14px", color: "var(--muted)", cursor: "pointer" }}>
+              Remember me
+            </label>
           </div>
 
           {error && (
@@ -90,23 +115,24 @@ export default function AuthPage() {
         </form>
 
         <div style={{ textAlign: "center", marginTop: "24px", fontSize: "14px" }}>
-          <span style={{ color: theme.muted }}>
+          <span style={{ color: "var(--muted)" }}>
             {isLogin ? "Don't have an account?" : "Already have an account?"}
           </span>
           {" "}
-          <button 
+          <Button 
+            variant="outline"
+            size="sm"
             onClick={() => setIsLogin(!isLogin)}
             style={{ 
               background: "none", 
               border: "none", 
               color: theme.accent, 
               fontWeight: "600", 
-              cursor: "pointer",
               padding: "4px"
             }}
           >
             {isLogin ? "Sign Up" : "Log In"}
-          </button>
+          </Button>
         </div>
       </Card>
     </div>

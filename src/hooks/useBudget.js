@@ -45,9 +45,12 @@ export function useBudget() {
 
   const setAllowance = async (amount) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const { data: budgetData, error } = await supabase
         .from('budget')
-        .upsert({ month: currentMonth, allowance: parseFloat(amount) || 0 }, { onConflict: 'user_id, month' })
+        .upsert({ month: currentMonth, allowance: parseFloat(amount) || 0, user_id: user.id }, { onConflict: 'user_id, month' })
         .select();
       
       if (error) throw error;
@@ -59,9 +62,12 @@ export function useBudget() {
 
   const addExpense = async (expense) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const { data: expenseData, error } = await supabase
         .from('expenses')
-        .insert([{ ...expense, amount: parseFloat(expense.amount), date: today() }])
+        .insert([{ ...expense, amount: parseFloat(expense.amount), date: today(), user_id: user.id }])
         .select();
       
       if (error) throw error;

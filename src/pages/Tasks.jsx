@@ -12,7 +12,7 @@ import AIResponse from "../components/AIResponse";
 export default function Tasks() {
   const { tasks, loading: dataLoading, addTask, toggleTask, removeTask } = useTasks();
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ name: "", type: "project", due: "", priority: "medium" });
+  const [form, setForm] = useState({ name: "", type: "project", due: "", priority: "medium", email_notifications: true });
   const [aiTip, setAiTip] = useState("");
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -28,7 +28,7 @@ export default function Tasks() {
   const handleAdd = () => {
     if (!form.name.trim()) return;
     addTask(form);
-    setForm({ name: "", type: "project", due: "", priority: "medium" });
+    setForm({ name: "", type: "project", due: "", priority: "medium", email_notifications: true });
     setModal(false);
   };
 
@@ -67,31 +67,58 @@ export default function Tasks() {
       </div>
 
       <Card>
-        <div className="pill-group">
+        <div className="pill-group" style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
           {["all", "pending", "done"].map(f => (
-            <button key={f} className={`pill ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>{f}</button>
+            <Button 
+              key={f} 
+              variant={filter === f ? "primary" : "outline"}
+              size="sm"
+              onClick={() => setFilter(f)}
+              style={{ borderRadius: "20px", fontSize: "12px", padding: "6px 16px" }}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </Button>
           ))}
         </div>
         {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", color: theme.muted, padding: "20px 0", fontSize: 14 }}>No tasks here!</div>
+          <div style={{ textAlign: "center", color: "var(--muted)", padding: "20px 0", fontSize: 14 }}>No tasks here!</div>
         ) : filtered.map(t => {
           const dl = daysLeft(t.due);
           return (
-            <div key={t.id} className="task-item">
-              <button className={`check-btn ${t.done ? "done" : ""}`} onClick={() => toggleTask(t.id)}>{t.done ? icons.check : ""}</button>
-              <div style={{ flex: 1 }}>
-                <div className={`task-name ${t.done ? "done" : ""}`}>{t.name}</div>
+            <div key={t.id} className="task-item" style={{ display: "flex", alignItems: "center", padding: "16px 0", borderBottom: "1px solid var(--border)" }}>
+              <Button 
+                variant={t.done ? "primary" : "outline"}
+                size="sm"
+                onClick={() => toggleTask(t.id)}
+                style={{ width: "24px", height: "24px", minWidth: "24px", padding: 0, borderRadius: "6px" }}
+              >
+                {t.done ? icons.check : ""}
+              </Button>
+              <div style={{ flex: 1, marginLeft: "12px" }}>
+                <div className={`task-name ${t.done ? "done" : ""}`} style={{ fontSize: "15px", fontWeight: "600", textDecoration: t.done ? "line-through" : "none", color: t.done ? "var(--muted)" : "var(--text)" }}>{t.name}</div>
                 <div className="row" style={{ marginTop: 6, flexWrap: "wrap", gap: 6 }}>
                   <Tag color={typeColor[t.type]}>{t.type}</Tag>
                   <Tag color={priorityColor[t.priority]}>{t.priority}</Tag>
+                  {t.email_notifications && (
+                    <span style={{ fontSize: "11px", color: theme.accent4, display: "flex", alignItems: "center", gap: "4px" }}>
+                      {icons.mail} notified
+                    </span>
+                  )}
                   {t.due && (
-                    <span className={`days-left ${dl !== null && dl <= 2 ? "urgent" : ""}`}>
+                    <span className={`days-left ${dl !== null && dl <= 2 ? "urgent" : ""}`} style={{ fontSize: "11px", color: dl !== null && dl <= 2 ? theme.danger : "var(--muted)", fontWeight: "600" }}>
                       {dl === 0 ? "⚠ Due today!" : dl < 0 ? "⚠ Overdue!" : `${dl}d left`}
                     </span>
                   )}
                 </div>
               </div>
-              <button className="del-btn" onClick={() => removeTask(t.id)}>{icons.trash}</button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => removeTask(t.id)}
+                style={{ color: theme.danger, padding: "6px", borderRadius: "8px" }}
+              >
+                {icons.trash}
+              </Button>
             </div>
           );
         })}
@@ -117,6 +144,20 @@ export default function Tasks() {
           </select>
         </div>
         <Input type="date" value={form.due} onChange={e => setForm({ ...form, due: e.target.value })} style={{ marginBottom: 14 }} />
+        
+        <div className="row" style={{ marginBottom: 14, background: "rgba(255,255,255,0.03)", padding: "12px", borderRadius: "12px" }}>
+          <input 
+            type="checkbox" 
+            id="email_notify"
+            checked={form.email_notifications} 
+            onChange={e => setForm({ ...form, email_notifications: e.target.checked })}
+            style={{ width: "18px", height: "18px", accentColor: theme.accent }}
+          />
+          <label htmlFor="email_notify" style={{ fontSize: "14px", fontWeight: "600", cursor: "pointer" }}>
+            {icons.mail} Send email notification
+          </label>
+        </div>
+
         <div className="row" style={{ gap: 10 }}>
           <Button variant="outline" style={{ flex: 1 }} onClick={() => setModal(false)}>Cancel</Button>
           <Button style={{ flex: 1 }} onClick={handleAdd}>Add Task</Button>

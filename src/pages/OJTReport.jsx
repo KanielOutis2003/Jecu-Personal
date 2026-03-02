@@ -66,21 +66,35 @@ ${logsText}`;
     <div>
       <div className="section-title">{icons.report} OJT Reports</div>
 
-      <div className="pill-group" style={{ marginBottom: 14 }}>
-        <button className={`pill ${view === "log" ? "active" : ""}`} onClick={() => setView("log")}>Daily Log</button>
-        <button className={`pill ${view === "generate" ? "active" : ""}`} onClick={() => setView("generate")}>Generate Report</button>
+      <div className="pill-group" style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        <Button 
+          variant={view === "log" ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setView("log")}
+          style={{ borderRadius: "20px", fontSize: "12px", padding: "6px 16px" }}
+        >
+          Daily Log
+        </Button>
+        <Button 
+          variant={view === "generate" ? "primary" : "outline"}
+          size="sm"
+          onClick={() => setView("generate")}
+          style={{ borderRadius: "20px", fontSize: "12px", padding: "6px 16px" }}
+        >
+          Generate Report
+        </Button>
       </div>
 
       {view === "log" && (
         <>
-          <div className="grid2" style={{ marginBottom: 14 }}>
-            <div className="stat-box">
-              <div className="stat-val" style={{ color: theme.accent }}>{logs.length}</div>
-              <div className="stat-lbl">Days Logged</div>
+          <div className="stat-grid">
+            <div className="stat-card">
+              <span className="stat-label">Days Logged</span>
+              <span className="stat-value" style={{ color: theme.accent }}>{logs.length}</span>
             </div>
-            <div className="stat-box">
-              <div className="stat-val" style={{ color: theme.accent2 }}>{totalHours}</div>
-              <div className="stat-lbl">Total Hours</div>
+            <div className="stat-card">
+              <span className="stat-label">Total Hours</span>
+              <span className="stat-value" style={{ color: theme.accent2 }}>{totalHours}</span>
             </div>
           </div>
 
@@ -95,17 +109,24 @@ ${logsText}`;
 
           <Card title="Previous Logs">
             {logs.length === 0 ? (
-              <div style={{ textAlign: "center", color: theme.muted, padding: "16px 0", fontSize: 14 }}>No logs yet!</div>
+              <div style={{ textAlign: "center", color: "var(--muted)", padding: "16px 0", fontSize: 14 }}>No logs yet!</div>
             ) : [...logs].reverse().slice(0, 5).map(l => (
-              <div key={l.id} className="task-item">
+              <div key={l.id} className="task-item" style={{ padding: "16px 0", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <div className="row-between">
                     <Tag color="cyan">{l.date}</Tag>
-                    <span style={{ fontSize: 12, color: theme.muted }}>{l.hours}hrs</span>
+                    <span style={{ fontSize: 12, color: "var(--muted)", fontWeight: "600" }}>{l.hours}hrs</span>
                   </div>
-                  <div style={{ fontSize: 13, color: theme.muted, marginTop: 6, lineHeight: 1.5 }}>{l.activities.slice(0, 100)}{l.activities.length > 100 ? "..." : ""}</div>
+                  <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 8, lineHeight: 1.6 }}>{l.activities.slice(0, 100)}{l.activities.length > 100 ? "..." : ""}</div>
                 </div>
-                <button className="del-btn" onClick={() => removeLog(l.id)}>✕</button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => removeLog(l.id)}
+                  style={{ color: theme.danger, padding: "6px", borderRadius: "8px", marginLeft: "12px" }}
+                >
+                  ✕
+                </Button>
               </div>
             ))}
           </Card>

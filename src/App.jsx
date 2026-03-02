@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { globalCss } from "./constants/theme";
 import Header from "./components/Header";
 import Navbar from "./components/Navbar";
@@ -12,7 +12,15 @@ import { useAuth } from "./hooks/useAuth";
 
 export default function App() {
   const [tab, setTab] = useState("home");
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
   const { user, loading } = useAuth();
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === "dark" ? "light" : "dark");
 
   if (loading) {
     return (
@@ -47,7 +55,7 @@ export default function App() {
     <>
       <style>{globalCss}</style>
       <div className="app">
-        <Header />
+        <Header theme={theme} onToggleTheme={toggleTheme} />
         <div className="content">
           {tab === "home" && <Home onTabChange={setTab} />}
           {tab === "tasks" && <Tasks />}

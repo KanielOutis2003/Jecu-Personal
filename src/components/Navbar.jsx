@@ -1,3 +1,5 @@
+import { Button } from "./ui/Button";
+
 export default function Navbar({ activeTab, onTabChange }) {
   const tabs = [
     { id: "home", label: "Home", emoji: "⌂" },
@@ -10,10 +12,25 @@ export default function Navbar({ activeTab, onTabChange }) {
   return (
     <nav className="nav">
       {tabs.map(t => (
-        <button key={t.id} className={`nav-btn ${activeTab === t.id ? "active" : ""}`} onClick={() => onTabChange(t.id)}>
+        <Button 
+          key={t.id} 
+          onClick={() => onTabChange(t.id)}
+          className={`nav-btn ${activeTab === t.id ? "active" : ""}`}
+          style={{ 
+            background: activeTab === t.id ? "rgba(139, 92, 246, 0.25)" : "transparent",
+            border: "none",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: "4px",
+            padding: "10px 4px",
+            borderRadius: "14px",
+            color: activeTab === t.id ? "var(--text)" : "var(--muted)"
+          }}
+        >
           <span>{t.emoji}</span>
-          <span>{t.label}</span>
-        </button>
+          <span style={{ fontSize: "11px", fontWeight: "600" }}>{t.label}</span>
+        </Button>
       ))}
     </nav>
   );

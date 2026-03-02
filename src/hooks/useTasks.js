@@ -27,9 +27,12 @@ export function useTasks() {
 
   const addTask = async (form) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const { data, error } = await supabase
         .from('tasks')
-        .insert([{ ...form, done: false }])
+        .insert([{ ...form, done: false, user_id: user.id }])
         .select();
       
       if (error) throw error;

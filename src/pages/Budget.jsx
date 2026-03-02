@@ -92,19 +92,26 @@ export default function Budget() {
 
       <Card>
         {data.expenses.length === 0 ? (
-          <div style={{ textAlign: "center", color: theme.muted, padding: "16px 0", fontSize: 14 }}>No expenses yet!</div>
+          <div style={{ textAlign: "center", color: "var(--muted)", padding: "16px 0", fontSize: 14 }}>No expenses yet!</div>
         ) : [...data.expenses].reverse().map(e => (
-          <div key={e.id} className="expense-item">
+          <div key={e.id} className="expense-item" style={{ padding: "16px 0", borderBottom: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 500 }}>{e.label}</div>
+              <div style={{ fontSize: 14, fontWeight: "600" }}>{e.label}</div>
               <div className="row" style={{ gap: 6, marginTop: 4 }}>
                 <Tag color={catColors[e.category]}>{e.category}</Tag>
-                <span style={{ fontSize: 11, color: theme.muted }}>{e.date}</span>
+                <span style={{ fontSize: 11, color: "var(--muted)" }}>{e.date}</span>
               </div>
             </div>
-            <div className="row" style={{ gap: 8 }}>
-              <span className="amount-neg">-₱{e.amount}</span>
-              <button className="del-btn" onClick={() => removeExpense(e.id)}>✕</button>
+            <div className="row" style={{ gap: 12 }}>
+              <span className="amount-neg" style={{ color: theme.danger, fontWeight: "700" }}>-₱{e.amount}</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => removeExpense(e.id)}
+                style={{ color: theme.danger, padding: "6px", borderRadius: "8px" }}
+              >
+                ✕
+              </Button>
             </div>
           </div>
         ))}

@@ -27,9 +27,12 @@ export function useOJT() {
 
   const addLog = async (log) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
       const { data, error } = await supabase
         .from('ojt_logs')
-        .insert([log])
+        .insert([{ ...log, user_id: user.id }])
         .select();
       
       if (error) throw error;
